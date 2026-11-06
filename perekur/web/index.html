@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#c2410c" />
+  <meta name="description" content="Перекур — веб-напоминание о перерывах в работе: сигнал по расписанию, готовые шаблоны, звуки, дни недели, диапазон времени и уведомления в системе." />
+  <title>Перекур — напоминание о перерывах</title>
+  <link rel="icon" type="image/png" href="./icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="brand">
+      <img src="./icons/icon-192.png" width="56" height="56" alt="Логотип «Перекур»" />
+      <div>
+        <h1>Перекур</h1>
+        <p class="tagline">Напоминание о перерывах в работе</p>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <span class="switch-label" id="enabledLabel">Напоминания включены</span>
+      <label class="switch" title="Включить или приостановить напоминания">
+        <input type="checkbox" id="chkEnabled" checked />
+        <span class="slider"></span>
+      </label>
+    </div>
+  </header>
+
+  <main class="layout">
+
+    <section class="card" aria-labelledby="hTemplates">
+      <h2 id="hTemplates"><span class="card-icon" aria-hidden="true">🧩</span>Готовые шаблоны</h2>
+      <div class="row">
+        <select id="cmbTemplate" class="grow" aria-label="Выбор шаблона"></select>
+        <button class="btn btn-primary" id="btnApplyTemplate" type="button">Применить</button>
+      </div>
+      <p class="hint" id="lblTemplateDesc"></p>
+    </section>
+
+    <section class="card" aria-labelledby="hSound">
+      <h2 id="hSound"><span class="card-icon" aria-hidden="true">🔊</span>Сигнал</h2>
+      <div class="row">
+        <select id="cmbSound" class="grow" aria-label="Звук сигнала"></select>
+        <button class="btn btn-icon" id="btnBrowseSound" type="button" title="Загрузить свой файл (.wav, .mp3, .ogg) — хранится локально в браузере">…</button>
+        <input type="file" id="fileCustomSound" accept="audio/*" hidden />
+        <button class="btn btn-icon" id="btnRemoveCustom" type="button" title="Убрать загруженный звук" hidden>✕</button>
+        <button class="btn" id="btnTestSound" type="button">▶ Прослушать</button>
+      </div>
+      <p class="hint">Системные звуки Windows веб-странице недоступны — здесь набор синтезированных сигналов. Кнопка «…» загружает свой файл (хранится в этом браузере, не более 1,5 МБ).</p>
+    </section>
+
+    <section class="card card-wide" aria-labelledby="hSchedule">
+      <h2 id="hSchedule"><span class="card-icon" aria-hidden="true">⏰</span>Расписание</h2>
+
+      <div class="row wrap gap-lg">
+        <label class="radio"><input type="radio" name="mode" id="rdoInterval" value="interval" checked /> <span>Каждые</span></label>
+        <input type="number" id="numInterval" class="num" min="1" max="480" step="5" value="60" aria-label="Интервал в минутах" />
+        <span class="unit">мин</span>
+        <span class="vdivider" aria-hidden="true"></span>
+        <label class="radio"><input type="radio" name="mode" id="rdoDaily" value="daily" /> <span>Каждый день в</span></label>
+        <input type="time" id="timeDaily" value="13:00" disabled aria-label="Время ежедневного сигнала" />
+      </div>
+
+      <div class="row wrap">
+        <span class="field-label">Активные дни:</span>
+        <div class="days" id="daysRow" role="group" aria-label="Дни недели"></div>
+      </div>
+
+      <div class="row wrap">
+        <span class="field-label">Диапазон времени <small>(для интервала)</small>:</span>
+        <input type="time" id="timeFrom" value="09:00" aria-label="Начало диапазона" />
+        <span class="dash">—</span>
+        <input type="time" id="timeTo" value="18:00" aria-label="Конец диапазона" />
+        <span class="hint inline" id="lblRangeHint">вне диапазона сигнал не звучит</span>
+      </div>
+
+      <label class="field-label block" for="txtNotification">Текст уведомления:</label>
+      <input type="text" id="txtNotification" class="grow" maxlength="200" autocomplete="off" />
+    </section>
+
+    <section class="card card-wide" aria-labelledby="hBehavior">
+      <h2 id="hBehavior"><span class="card-icon" aria-hidden="true">🔔</span>Уведомление в панели уведомлений</h2>
+      <label class="check"><input type="checkbox" id="chkNotifications" checked /> Показывать уведомление в системе (Action Center / центр уведомлений)</label>
+      <div class="row">
+        <button class="btn" id="btnAskNotificationPermission" type="button">Включить уведомления</button>
+        <span class="hint inline" id="lblNotificationState">Разрешение не запрошено</span>
+      </div>
+      <p class="hint">💡 Оставьте вкладку открытой (иконку можно закрепить — ПКМ по вкладке → «Закрепить»). В фоновых вкладках браузер замедляет таймеры, поэтому сигнал может прийти с задержкой. Установите «Перекур» как приложение (кнопка «⬇ Установить» появится ниже) — так он работает стабильнее.</p>
+    </section>
+
+    <div class="statusbar" role="status" aria-live="polite">
+      <span class="dot" id="statusDot" data-tone="active"></span>
+      <span class="statusbar-text" id="lblNext">…</span>
+      <div class="status-actions">
+        <button class="btn btn-accent" id="btnNow" type="button">🔔 Перекур сейчас</button>
+        <button class="btn btn-primary" id="btnInstall" type="button" hidden>⬇ Установить</button>
+      </div>
+    </div>
+
+  </main>
+
+  <div class="overlay" id="overlay" hidden>
+    <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="overlayTitle">
+      <div class="overlay-emoji" aria-hidden="true">🔔</div>
+      <h2 class="overlay-title" id="overlayTitle">Перекур!</h2>
+      <p class="overlay-text" id="overlayText"></p>
+      <div class="overlay-actions">
+        <button class="btn btn-primary btn-lg" id="btnOverlayOk" type="button">✓ Я сделал перекур</button>
+        <button class="btn btn-ghost btn-lg" id="btnOverlaySnooze" type="button">+5 минут</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="app-footer">
+    <span>Настройки сохраняются локально в вашем браузере.</span>
+    <span><a href="https://github.com/visiontripin/soft/tree/arena/26447c4c-soft/perekur" target="_blank" rel="noopener noreferrer">Исходный код на GitHub →</a></span>
+  </footer>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
