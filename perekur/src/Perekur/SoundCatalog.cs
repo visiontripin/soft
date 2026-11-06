@@ -70,7 +70,9 @@ public static class SoundCatalog
                 var path = soundId["wav:".Length..];
                 if (File.Exists(path))
                 {
-                    using var player = new SoundPlayer(path);
+                    // Файл НЕ освобождаем сразу: воспроизведение асинхронное,
+                    // поток воспроизведения удерживает объект самостоятельно.
+                    var player = new SoundPlayer(path);
                     player.Play(); // асинхронно, не блокирует UI
                     return;
                 }
