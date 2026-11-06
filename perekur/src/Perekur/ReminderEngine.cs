@@ -2,8 +2,9 @@ namespace Perekur;
 
 /// <summary>
 /// Планировщик сигналов «Перекур». Проверяет раз в секунду, не наступило ли время
-/// следующего сигнала. Сигналы привязаны к началу диапазона (RangeStart + k * Interval),
-/// поэтому расписание предсказуемо: 09:00, 10:00, 11:00…
+/// следующего сигнала. В режиме интервала сигналы привязаны к началу диапазона
+/// (RangeStart + k * Interval), в режиме «каждый час» — к минуте HourlyMinute
+/// каждого часа внутри диапазона; расписание предсказуемо и переживает простои.
 /// </summary>
 public sealed class ReminderEngine : IDisposable
 {
@@ -82,9 +83,12 @@ public sealed class ReminderEngine : IDisposable
     public static DateTime? ComputeNext(AppSettings settings, DateTime from)
     {
         ArgumentNullException.ThrowIfNull(settings);
-        return settings.Mode == ScheduleMode.Interval
-            ? ComputeNextInterval(settings, from)
-            : ComputeNextDaily(settings, from);
+        return settings.Mode switch
+        {
+            ScheduleMode.DailyTime => ComputeNextDaily(settings, from),
+            ScheduleMode.Hourly => ComputeNextHourly(settings, from),
+            _ => ComputeNextInterval(settings, from),
+        };
     }
 
     public static TimeSpan ParseTime(string? value, TimeSpan fallback) =>
@@ -137,6 +141,52 @@ public sealed class ReminderEngine : IDisposable
             if (candidate < endOfDay)
             {
                 return candidate;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Каждый час в заданную минуту (HourlyMinute) внутри [RangeStart, RangeEnd).</summary>
+    private static DateTime? ComputeNextHourly(AppSettings settings, DateTime from)
+    {
+        var rangeStart = ParseTime(settings.RangeStart, new TimeSpan(8, 0, 0));
+        var rangeEnd = ParseTime(settings.RangeEnd, new TimeSpan(17, 0, 0));
+        if (rangeEnd <= rangeStart)
+        {
+            return null;
+        }
+
+        var minute = Math.Clamp(settings.HourlyMinute, 0, 59);
+
+        for (var dayOffset = 0; dayOffset < 14; dayOffset++)
+        {
+            var day = from.Date.AddDays(dayOffset);
+            if (!IsActiveDay(settings, day))
+            {
+                continue;
+            }
+
+            var startOfDay = day + rangeStart;
+            var endOfDay = day + rangeEnd;
+
+            for (var hour = 0; hour < 24; hour++)
+            {
+                var candidate = day.AddHours(hour).AddMinutes(minute);
+                if (candidate < startOfDay)
+                {
+                    continue;
+                }
+
+                if (candidate >= endOfDay)
+                {
+                    break;
+                }
+
+                if (candidate > from)
+                {
+                    return candidate;
+                }
             }
         }
 

@@ -351,6 +351,27 @@ select { cursor: pointer; }
 
 .status-actions { display: flex; gap: 8px; flex: 0 0 auto; }
 
+/* ---------- Баннер ошибки ---------- */
+
+.error-banner {
+  position: sticky;
+  top: 0;
+  z-index: 300;
+  background: var(--error);
+  color: #fff;
+  text-align: center;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ---------- Подсветка невалидного диапазона ---------- */
+
+#rowRange.invalid .hint { color: var(--error); font-weight: 650; }
+.range-disabled .field-label,
+.range-disabled input,
+.range-disabled .hint { opacity: 0.45; }
+
 /* ---------- Оверлей «Перекур!» ---------- */
 
 .overlay {

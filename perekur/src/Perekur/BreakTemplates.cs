@@ -32,6 +32,20 @@ public static class BreakTemplates
         },
         new()
         {
+            Name = "Каждый час в :55 (08:00–17:00)",
+            Description = "Ровно в 55-ю минуту каждого часа с 08:00 до 17:00 (08:55, 09:55 … 16:55), Пн–Пт.",
+            ApplyTo = s =>
+            {
+                s.Mode = ScheduleMode.Hourly;
+                s.HourlyMinute = 55;
+                s.RangeStart = "08:00";
+                s.RangeEnd = "17:00";
+                s.ActiveDays = new List<int>(MondayToFriday);
+                s.NotificationText = "Пора сделать перекур! Оторвитесь от экрана на пару минут.";
+            },
+        },
+        new()
+        {
             Name = "Помодоро 25/5",
             Description = "25 минут фокуса — 5 минут перерыва, весь рабочий день, Пн–Пт.",
             ApplyTo = s =>

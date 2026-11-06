@@ -13,6 +13,8 @@
 </head>
 <body>
 
+  <div class="error-banner" id="errorBanner" hidden role="alert"></div>
+
   <header class="app-header">
     <div class="brand">
       <img src="./icons/icon-192.png" width="56" height="56" alt="Логотип «Перекур»" />
@@ -62,6 +64,10 @@
         <input type="number" id="numInterval" class="num" min="1" max="480" step="5" value="60" aria-label="Интервал в минутах" />
         <span class="unit">мин</span>
         <span class="vdivider" aria-hidden="true"></span>
+        <label class="radio"><input type="radio" name="mode" id="rdoHourly" value="hourly" /> <span>Каждый час в</span></label>
+        <input type="number" id="numHourlyMinute" class="num" min="0" max="59" step="1" value="55" aria-label="Минута каждого часа" disabled />
+        <span class="unit">минут</span>
+        <span class="vdivider" aria-hidden="true"></span>
         <label class="radio"><input type="radio" name="mode" id="rdoDaily" value="daily" /> <span>Каждый день в</span></label>
         <input type="time" id="timeDaily" value="13:00" disabled aria-label="Время ежедневного сигнала" />
       </div>
@@ -71,8 +77,8 @@
         <div class="days" id="daysRow" role="group" aria-label="Дни недели"></div>
       </div>
 
-      <div class="row wrap">
-        <span class="field-label">Диапазон времени <small>(для интервала)</small>:</span>
+      <div class="row wrap" id="rowRange">
+        <span class="field-label">Диапазон времени <small>(для интервала и «каждый час»)</small>:</span>
         <input type="time" id="timeFrom" value="09:00" aria-label="Начало диапазона" />
         <span class="dash">—</span>
         <input type="time" id="timeTo" value="18:00" aria-label="Конец диапазона" />
@@ -118,9 +124,12 @@
 
   <footer class="app-footer">
     <span>Настройки сохраняются локально в вашем браузере.</span>
-    <span><a href="https://github.com/visiontripin/soft/tree/arena/26447c4c-soft/perekur" target="_blank" rel="noopener noreferrer">Исходный код на GitHub →</a></span>
+    <span><a href="https://github.com/visiontripin/soft/tree/arena/26447c4c-soft/perekur/web" target="_blank" rel="noopener noreferrer">Исходный код на GitHub →</a></span>
   </footer>
 
-  <script type="module" src="./app.js"></script>
+  <script src="./scheduler.js"></script>
+  <script src="./sounds.js"></script>
+  <script src="./templates.js"></script>
+  <script src="./app.js"></script>
 </body>
 </html>

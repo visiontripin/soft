@@ -8,6 +8,9 @@ public enum ScheduleMode
 
     /// <summary>Один раз в день в выбранное время.</summary>
     DailyTime = 1,
+
+    /// <summary>Каждый час в заданную минуту (HourlyMinute) внутри диапазона RangeStart–RangeEnd.</summary>
+    Hourly = 2,
 }
 
 /// <summary>
@@ -22,13 +25,16 @@ public sealed class AppSettings
     /// <summary>Интервал повтора сигнала в минутах (режим Interval).</summary>
     public int IntervalMinutes { get; set; } = 60;
 
+    /// <summary>Минута каждого часа для режима Hourly (0–59). По умолчанию 55 — сигнал в :55.</summary>
+    public int HourlyMinute { get; set; } = 55;
+
     /// <summary>Время ежедневного сигнала "HH:mm" (режим DailyTime).</summary>
     public string DailyTime { get; set; } = "13:00";
 
-    /// <summary>Начало активного диапазона "HH:mm" (режим Interval).</summary>
+    /// <summary>Начало активного диапазона "HH:mm" (режимы Interval и Hourly).</summary>
     public string RangeStart { get; set; } = "09:00";
 
-    /// <summary>Конец активного диапазона "HH:mm", не включая (режим Interval).</summary>
+    /// <summary>Конец активного диапазона "HH:mm", не включая (режимы Interval и Hourly).</summary>
     public string RangeEnd { get; set; } = "18:00";
 
     /// <summary>Дни недели, когда действует расписание. Значения (int)DayOfWeek.</summary>

@@ -1,6 +1,6 @@
 /* «Перекур» — Service Worker: офлайн-кэш оболочки + показ уведомления и фокус по клику. */
 
-const CACHE = 'perekur-v1';
+const CACHE = 'perekur-v2';
 const ASSETS = [
   './',
   './index.html',

@@ -28,6 +28,8 @@ public sealed class MainForm : Form
     private ComboBox _cmbSound = null!;
     private RadioButton _rdoInterval = null!;
     private NumericUpDown _nudInterval = null!;
+    private RadioButton _rdoHourly = null!;
+    private NumericUpDown _numHourlyMinute = null!;
     private RadioButton _rdoDaily = null!;
     private DateTimePicker _dtpDaily = null!;
     private readonly Dictionary<int, CheckBox> _dayChecks = new(); // DayOfWeek (int) -> checkbox
@@ -57,7 +59,7 @@ public sealed class MainForm : Form
         }
 
         Text = "Перекур — напоминание о перерывах";
-        ClientSize = new Size(660, 630);
+        ClientSize = new Size(660, 660);
         FormBorderStyle = FormBorderStyle.FixedSingle;
         MaximizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
@@ -204,43 +206,81 @@ public sealed class MainForm : Form
         grpSound.Controls.AddRange(new Control[] { _cmbSound, btnBrowse, btnTestSound });
 
         // ---------- Расписание ----------
-        var grpSchedule = MakeGroup("Расписание", 8, 190, 644, 214);
+        var grpSchedule = MakeGroup("Расписание", 8, 190, 644, 238);
 
+        // Строка 1: интервал и «каждый час в…»
         _rdoInterval = new RadioButton
         {
-            Left = 10, Top = 24, Width = 70, Height = 24,
+            Left = 10, Top = 22, Width = 70, Height = 24,
             Text = "Каждые",
         };
 
         _nudInterval = new NumericUpDown
         {
-            Left = 82, Top = 21, Width = 74, Height = 26,
+            Left = 82, Top = 19, Width = 74, Height = 26,
             Minimum = 1, Maximum = 480, Increment = 5, Value = 60,
             TextAlign = HorizontalAlignment.Right,
         };
 
         var lblMinutes = new Label
         {
-            Left = 164, Top = 25, Width = 42, Height = 22,
+            Left = 162, Top = 23, Width = 40, Height = 22,
             Text = "мин",
             TextAlign = ContentAlignment.MiddleLeft,
         };
 
+        _rdoHourly = new RadioButton
+        {
+            Left = 210, Top = 22, Width = 140, Height = 24,
+            Text = "Каждый час в",
+        };
+
+        _numHourlyMinute = new NumericUpDown
+        {
+            Left = 352, Top = 19, Width = 62, Height = 26,
+            Minimum = 0, Maximum = 59, Increment = 1, Value = 55,
+            TextAlign = HorizontalAlignment.Right,
+        };
+
+        var lblHourlyMinute = new Label
+        {
+            Left = 420, Top = 23, Width = 80, Height = 22,
+            Text = "минут",
+            TextAlign = ContentAlignment.MiddleLeft,
+        };
+
+        // Строка 2: ежедневный сигнал
         _rdoDaily = new RadioButton
         {
-            Left = 236, Top = 24, Width = 150, Height = 24,
+            Left = 10, Top = 58, Width = 150, Height = 24,
             Text = "Каждый день в",
         };
 
         _dtpDaily = new DateTimePicker
         {
-            Left = 384, Top = 21, Width = 116, Height = 26,
+            Left = 164, Top = 55, Width = 116, Height = 26,
             Format = DateTimePickerFormat.Custom,
             CustomFormat = "HH:mm",
             ShowUpDown = true,
         };
 
+        var lblModesHint = new Label
+        {
+            Left = 290, Top = 59, Width = 344, Height = 22,
+            Text = "«Каждый час» — сигнал ровно в указанную минуту",
+            ForeColor = SystemColors.GrayText,
+            Font = new Font(Font, FontStyle.Italic),
+            TextAlign = ContentAlignment.MiddleLeft,
+            AutoEllipsis = true,
+        };
+
         _rdoInterval.CheckedChanged += (_, _) =>
+        {
+            if (_suppressEvents) return;
+            UpdateModeUi();
+            ApplySettings();
+        };
+        _rdoHourly.CheckedChanged += (_, _) =>
         {
             if (_suppressEvents) return;
             UpdateModeUi();
@@ -253,11 +293,12 @@ public sealed class MainForm : Form
             ApplySettings();
         };
         _nudInterval.ValueChanged += (_, _) => { if (!_suppressEvents) ApplySettings(); };
+        _numHourlyMinute.ValueChanged += (_, _) => { if (!_suppressEvents) ApplySettings(); };
         _dtpDaily.ValueChanged += (_, _) => { if (!_suppressEvents) ApplySettings(); };
 
         var lblDays = new Label
         {
-            Left = 10, Top = 66, Width = 116, Height = 22,
+            Left = 10, Top = 92, Width = 116, Height = 22,
             Text = "Активные дни:",
             TextAlign = ContentAlignment.MiddleLeft,
         };
@@ -278,7 +319,7 @@ public sealed class MainForm : Form
         {
             var chk = new CheckBox
             {
-                Left = dayX, Top = 62, Width = 40, Height = 24,
+                Left = dayX, Top = 88, Width = 40, Height = 24,
                 Text = shortName,
                 Tag = day,
             };
@@ -290,14 +331,14 @@ public sealed class MainForm : Form
 
         var lblRange = new Label
         {
-            Left = 10, Top = 100, Width = 300, Height = 22,
-            Text = "Диапазон времени (для интервала):",
+            Left = 10, Top = 122, Width = 470, Height = 22,
+            Text = "Диапазон времени (интервал и «каждый час»):",
             TextAlign = ContentAlignment.MiddleLeft,
         };
 
         _dtpFrom = new DateTimePicker
         {
-            Left = 10, Top = 126, Width = 96, Height = 26,
+            Left = 10, Top = 148, Width = 96, Height = 26,
             Format = DateTimePickerFormat.Custom,
             CustomFormat = "HH:mm",
             ShowUpDown = true,
@@ -306,14 +347,14 @@ public sealed class MainForm : Form
 
         var lblDash = new Label
         {
-            Left = 110, Top = 129, Width = 22, Height = 22,
+            Left = 110, Top = 151, Width = 22, Height = 22,
             Text = "—",
             TextAlign = ContentAlignment.MiddleCenter,
         };
 
         _dtpTo = new DateTimePicker
         {
-            Left = 134, Top = 126, Width = 96, Height = 26,
+            Left = 134, Top = 148, Width = 96, Height = 26,
             Format = DateTimePickerFormat.Custom,
             CustomFormat = "HH:mm",
             ShowUpDown = true,
@@ -322,7 +363,7 @@ public sealed class MainForm : Form
 
         _lblRangeWarning = new Label
         {
-            Left = 240, Top = 129, Width = 384, Height = 22,
+            Left = 240, Top = 151, Width = 384, Height = 22,
             Text = "вне этого диапазона сигнал не звучит",
             ForeColor = SystemColors.GrayText,
             Font = new Font(Font, FontStyle.Italic),
@@ -331,27 +372,28 @@ public sealed class MainForm : Form
 
         var lblNotif = new Label
         {
-            Left = 10, Top = 160, Width = 200, Height = 20,
+            Left = 10, Top = 182, Width = 200, Height = 20,
             Text = "Текст уведомления:",
             TextAlign = ContentAlignment.MiddleLeft,
         };
 
         _txtNotification = new TextBox
         {
-            Left = 10, Top = 180, Width = 624, Height = 24,
+            Left = 10, Top = 202, Width = 624, Height = 24,
             MaxLength = 200,
         };
         _txtNotification.TextChanged += (_, _) => { if (!_suppressEvents) ApplySettings(); };
 
         grpSchedule.Controls.AddRange(new Control[]
         {
-            _rdoInterval, _nudInterval, lblMinutes, _rdoDaily, _dtpDaily,
+            _rdoInterval, _nudInterval, lblMinutes, _rdoHourly, _numHourlyMinute, lblHourlyMinute,
+            _rdoDaily, _dtpDaily, lblModesHint,
             lblDays, lblRange, _dtpFrom, lblDash, _dtpTo, _lblRangeWarning,
             lblNotif, _txtNotification,
         });
 
         // ---------- Поведение ----------
-        var grpBehavior = MakeGroup("Поведение", 8, 412, 644, 138);
+        var grpBehavior = MakeGroup("Поведение", 8, 436, 644, 138);
 
         _chkEnabled = new CheckBox
         {
@@ -400,7 +442,7 @@ public sealed class MainForm : Form
         // ---------- Статус и нижние кнопки ----------
         _lblNext = new Label
         {
-            Left = 12, Top = 556, Width = 636, Height = 22,
+            Left = 12, Top = 580, Width = 636, Height = 22,
             Font = new Font(Font, FontStyle.Bold),
             ForeColor = Color.FromArgb(180, 83, 9),
             TextAlign = ContentAlignment.MiddleLeft,
@@ -411,21 +453,21 @@ public sealed class MainForm : Form
 
         var btnNow = new Button
         {
-            Left = 8, Top = 582, Width = 190, Height = 38,
+            Left = 8, Top = 606, Width = 190, Height = 38,
             Text = "🔔 Перекур сейчас",
         };
         btnNow.Click += (_, _) => FireNow();
 
         var btnHide = new Button
         {
-            Left = 206, Top = 582, Width = 150, Height = 38,
+            Left = 206, Top = 606, Width = 150, Height = 38,
             Text = "Скрыть в трей",
         };
         btnHide.Click += (_, _) => Hide();
 
         var lblAutosave = new Label
         {
-            Left = 364, Top = 592, Width = 288, Height = 20,
+            Left = 364, Top = 616, Width = 288, Height = 20,
             Text = "Настройки сохраняются автоматически",
             ForeColor = SystemColors.GrayText,
             Font = new Font(Font, FontStyle.Italic),
@@ -599,8 +641,10 @@ public sealed class MainForm : Form
         try
         {
             _rdoInterval.Checked = _settings.Mode == ScheduleMode.Interval;
+            _rdoHourly.Checked = _settings.Mode == ScheduleMode.Hourly;
             _rdoDaily.Checked = _settings.Mode == ScheduleMode.DailyTime;
             _nudInterval.Value = Math.Clamp(_settings.IntervalMinutes, (int)_nudInterval.Minimum, (int)_nudInterval.Maximum);
+            _numHourlyMinute.Value = Math.Clamp(_settings.HourlyMinute, 0, 59);
             _dtpDaily.Value = DateTime.Today + ReminderEngine.ParseTime(_settings.DailyTime, new TimeSpan(13, 0, 0));
             _dtpFrom.Value = DateTime.Today + ReminderEngine.ParseTime(_settings.RangeStart, new TimeSpan(9, 0, 0));
             _dtpTo.Value = DateTime.Today + ReminderEngine.ParseTime(_settings.RangeEnd, new TimeSpan(18, 0, 0));
@@ -629,8 +673,11 @@ public sealed class MainForm : Form
 
     private void ReadUiIntoSettings()
     {
-        _settings.Mode = _rdoDaily.Checked ? ScheduleMode.DailyTime : ScheduleMode.Interval;
+        _settings.Mode = _rdoDaily.Checked ? ScheduleMode.DailyTime
+            : _rdoHourly.Checked ? ScheduleMode.Hourly
+            : ScheduleMode.Interval;
         _settings.IntervalMinutes = (int)_nudInterval.Value;
+        _settings.HourlyMinute = (int)_numHourlyMinute.Value;
         _settings.DailyTime = _dtpDaily.Value.ToString("HH:mm", CultureInfo.InvariantCulture);
         _settings.RangeStart = _dtpFrom.Value.ToString("HH:mm", CultureInfo.InvariantCulture);
         _settings.RangeEnd = _dtpTo.Value.ToString("HH:mm", CultureInfo.InvariantCulture);
@@ -671,10 +718,13 @@ public sealed class MainForm : Form
     private void UpdateModeUi()
     {
         var interval = _rdoInterval.Checked;
+        var hourly = _rdoHourly.Checked;
+        var daily = _rdoDaily.Checked;
         _nudInterval.Enabled = interval;
-        _dtpFrom.Enabled = interval;
-        _dtpTo.Enabled = interval;
-        _dtpDaily.Enabled = !interval;
+        _numHourlyMinute.Enabled = hourly;
+        _dtpFrom.Enabled = !daily;   // диапазон действует в interval и hourly
+        _dtpTo.Enabled = !daily;
+        _dtpDaily.Enabled = daily;
     }
 
     // =====================================================================
@@ -707,7 +757,7 @@ public sealed class MainForm : Form
 
     private void UpdateStatusLabel()
     {
-        if (_settings.Mode == ScheduleMode.Interval && !ReminderEngine.IsRangeValid(_settings))
+        if (_settings.Mode != ScheduleMode.DailyTime && !ReminderEngine.IsRangeValid(_settings))
         {
             _lblNext.Text = "⚠ Некорректный диапазон: «до» должно быть позже «с»";
             _lblNext.ForeColor = Color.FromArgb(185, 28, 28);
