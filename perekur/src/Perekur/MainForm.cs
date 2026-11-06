@@ -790,6 +790,17 @@ public sealed class MainForm : Form
         {
             e.Cancel = true;
             Hide(); // крестиком окно прячется в трей, приложение продолжает работать
+
+            if (!_trayHintShown)
+            {
+                _trayHintShown = true;
+                _notifyIcon?.ShowBalloonTip(
+                    4000,
+                    "Перекур",
+                    "Окно скрыто в трей — напоминания продолжают работать. Двойной клик по значку открывает окно.",
+                    ToolTipIcon.Info);
+            }
+
             return;
         }
 
